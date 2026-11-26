@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sequência Fit</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1117;--card:#161b22;--card2:#1c232d;--line:#2a323d;--tx:#f0f3f6;--mu:#8b96a3;--ac:#58e06b;--acd:#2fa84a;--fire:#ff9f1c;--blue:#4cc9f0;--r:18px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700}
+.app{max-width:480px;margin:0 auto;padding:16px 16px 40px;display:grid;gap:14px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:16px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:0 0 12px;font-weight:800}
+.hero{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1d2430,#161b22)}
+.flame{font-size:56px;line-height:1;filter:grayscale(1) brightness(.6);transition:.4s}
+.flame.on{filter:none;animation:flick 1.6s infinite alternate}
+@keyframes flick{from{transform:scale(1) rotate(-3deg)}to{transform:scale(1.08) rotate(3deg)}}
+.big{font-size:42px;font-weight:900;color:var(--fire);line-height:1}
+.sub{color:var(--mu);font-size:14px;margin-top:4px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
+.day{font-size:12px;color:var(--mu)}
+.dot{width:34px;height:34px;border-radius:50%;margin:6px auto 0;border:2px solid var(--line);display:grid;place-items:center;font-size:16px;background:var(--card2)}
+.dot.ok{background:var(--ac);border-color:var(--ac);color:#06210d}
+.dot.today{border-color:var(--blue)}
+.ringwrap{display:flex;align-items:center;gap:16px}
+.ring{position:relative;width:110px;height:110px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-size:22px;font-weight:900}
+.ring small{display:block;font-size:11px;color:var(--mu);font-weight:700}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip{background:var(--card2);border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;color:var(--tx);padding:10px 4px;font:inherit;font-size:13px;cursor:pointer;text-align:center}
+.chip span{display:block;font-size:24px}
+.chip.sel{border-color:var(--blue);background:#14303a}
+.chip:active{transform:translateY(2px);border-bottom-width:2px}
+label{display:block;font-size:13px;color:var(--mu);margin:14px 0 6px}
+input[type=range]{width:100%;accent-color:var(--ac)}
+input[type=number],input[type=text]{width:100%;background:var(--card2);border:2px solid var(--line);border-radius:12px;color:var(--tx);padding:10px;font:inherit;font-size:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{background:var(--card2);border:2px solid var(--line);border-radius:12px;color:var(--mu);padding:9px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.sel{color:var(--tx);border-color:var(--ac)}
+.val{color:var(--tx);font-weight:900}
+.cta{width:100%;margin-top:18px;background:var(--ac);color:#06210d;border:0;border-bottom:5px solid var(--acd);border-radius:16px;padding:15px;font:inherit;font-size:16px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.cta:active{transform:translateY(3px);border-bottom-width:2px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--card2);border-radius:14px;padding:12px}
+.stat b{font-size:22px;display:block}
+.stat span{font-size:12px;color:var(--mu)}
+.item{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .e{font-size:26px}.item .t{flex:1;font-size:14px}.item .t small{display:block;color:var(--mu);font-weight:700}
+.del{background:none;border:0;color:var(--mu);font-size:18px;cursor:pointer}
+.empty{color:var(--mu);font-size:14px;text-align:center;padding:10px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,120px);background:var(--ac);color:#06210d;padding:14px 22px;border-radius:16px;font-weight:900;transition:.4s;z-index:20;text-align:center;max-width:90%}
+.toast.show{transform:translate(-50%,0)}
+.pc{position:fixed;top:40%;left:50%;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:30;animation:fly 1.1s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+.pop{animation:pop .6s}
+@keyframes pop{40%{transform:scale(1.25)}}
+details summary{cursor:pointer;color:var(--mu);font-size:13px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:5px}
+.tabs button{background:none;border:0;border-radius:12px;color:var(--mu);padding:10px 2px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.tabs button.sel{background:var(--card2);color:var(--tx)}
+.hide{display:none!important}
+.bars{display:flex;align-items:flex-end;gap:6px;height:130px;margin-top:6px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:10px;color:var(--mu)}
+.bar i{display:block;width:100%;border-radius:6px 6px 2px 2px;background:var(--blue);min-height:3px}
+.bar.last i{background:var(--ac)}
+.hb{display:grid;grid-template-columns:90px 1fr 50px;align-items:center;gap:8px;font-size:13px;margin:8px 0}
+.hb div{height:12px;border-radius:6px;background:var(--card2)}.hb div i{display:block;height:100%;border-radius:6px;background:var(--ac)}
+.pr{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.pr:first-of-type{border-top:0}.pr b{color:var(--fire)}
+.trend{font-size:13px;margin-top:10px;color:var(--mu)}.up{color:var(--ac)}.dn{color:#ff6b6b}
+.live{background:var(--card2);border-radius:14px;padding:12px;margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.live b{display:block;font-size:18px}.live span{font-size:11px;color:var(--mu)}
+select{width:100%;background:var(--card2);border:2px solid var(--line);border-radius:12px;color:var(--tx);padding:10px;font:inherit;font-size:15px}
+.chips.four{grid-template-columns:repeat(4,1fr)}
+.seg.two{grid-template-columns:repeat(2,1fr)}.seg.auto{grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}
+.q{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--card2);border:2px solid var(--line);color:var(--blue);font-size:12px;font-weight:900;cursor:pointer;font-style:normal;flex:none;vertical-align:middle}
+.sw{display:flex;gap:4px;align-items:center}.sw button{flex:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);border:2px solid var(--line);border-radius:22px 22px 0 0;max-width:480px;width:100%;padding:20px 18px calc(24px + env(safe-area-inset-bottom,0px));max-height:80vh;overflow:auto}
+.sheet h3{margin:0 0 4px;font-size:20px}.sheet p{color:var(--mu);margin:10px 0;font-size:14px;line-height:1.5}.sheet p b{color:var(--blue);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px;min-width:430px}
+th,td{padding:7px 5px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:800}
+tfoot td{font-weight:900;color:var(--fire);border-bottom:0}
+.mb{margin:10px 0}.mb .h{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}.mb .t{height:10px;border-radius:6px;background:var(--card2);overflow:hidden}.mb i{display:block;height:100%;background:var(--ac);transition:width .6s}
+.sg{background:var(--card2);border-radius:14px;padding:10px 12px;margin:8px 0;font-size:14px}.sg b{display:block;margin-bottom:4px}.sg small{display:block;color:var(--mu);font-weight:700}
+.tip{border-left:4px solid var(--ac);background:var(--card2);padding:10px 12px;border-radius:0 12px 12px 0;margin:8px 0;font-size:14px}
+.rec{padding:10px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.45}.rec:first-of-type{border-top:0}.rec b{display:block;color:var(--blue);font-size:13px;margin-bottom:2px}
+#eco .tabs button{font-size:11px;padding:10px 0}
+.dot.bad{background:#ff6b6b;border-color:#ff6b6b;color:#2b0000}
+.mode{max-width:480px;margin:0 auto;padding:12px 16px 0;position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg)}
+.mode .tabs button{font-size:14px;padding:11px 4px}
+.st{background:none;border:0;font-size:17px;cursor:pointer;padding:0}
+.ghost{background:var(--card2)!important;color:var(--tx)!important;border-bottom-color:var(--line)!important;margin-top:10px}
+body.eco{--ac:#f5c542;--acd:#a8821a;--blue:#34d399;--fire:#ffd166;--bg:#0b1210}
+body.eco .cta,body.eco .dot.ok,body.eco .toast{color:#2b2000}
+body.eco .card{background:#121a17}
+body.eco .hero{background:linear-gradient(135deg,#1b2a22,#121a17)}
+body.eco .big{color:var(--ac)}
+/* ===== efeitos ===== */
+@keyframes up{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.enter>*{animation:up .5s cubic-bezier(.2,.8,.2,1) both}
+.enter>*:nth-child(2){animation-delay:.06s}.enter>*:nth-child(3){animation-delay:.12s}.enter>*:nth-child(4){animation-delay:.18s}.enter>*:nth-child(5){animation-delay:.24s}.enter>*:nth-child(6){animation-delay:.3s}.enter>*:nth-child(7){animation-delay:.36s}.enter>*:nth-child(8){animation-delay:.42s}
+@keyframes grow{from{transform:scaleY(0)}}
+.ba{transform-box:fill-box;transform-origin:50% 100%;animation:grow .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.rv{animation:reveal 1.1s ease-out both}
+@keyframes wid{from{width:0}}
+.hb div i,.mb i{animation:wid .9s cubic-bezier(.2,.8,.2,1) both}
+.cta{position:relative;overflow:hidden}
+.cta:not(.ghost)::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-130%);animation:shine 3.6s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+.card{transition:border-color .25s}.card:hover{border-color:#3a4553}
+.chip{transition:transform .15s,border-color .2s,background .2s}.chip:hover{transform:translateY(-2px)}
+.chip.sel{animation:selpop .35s}
+@keyframes selpop{40%{transform:scale(1.07)}}
+.tabs button{transition:background .25s,color .25s}
+.flame.on{filter:drop-shadow(0 0 14px rgba(255,159,28,.65))}
+body.eco .flame.on{filter:drop-shadow(0 0 14px rgba(245,197,66,.7));animation:coin 2.6s ease-in-out infinite}
+@keyframes coin{0%,100%{transform:rotateY(0)}50%{transform:rotateY(180deg) scale(1.08)}}
+.pulse{animation:pulsing .7s}
+@keyframes pulsing{40%{transform:scale(1.14)}}
+.shake{animation:shk .5s}
+@keyframes shk{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.fl{position:fixed;transform:translate(-50%,0);color:var(--ac);font-weight:900;font-size:20px;pointer-events:none;z-index:50;animation:flt 1.2s ease-out forwards;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+@keyframes flt{to{transform:translate(-50%,-90px);opacity:0}}
+.coin{position:fixed;top:-40px;z-index:45;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+.dot.today.ok{animation:pop .6s}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(600px 320px at 85% -10%,rgba(88,224,107,.10),transparent 60%),radial-gradient(500px 320px at -10% 110%,rgba(76,201,240,.08),transparent 60%);animation:amb 12s ease-in-out infinite alternate}
+body.eco::before{background:radial-gradient(600px 320px at 85% -10%,rgba(245,197,66,.12),transparent 60%),radial-gradient(500px 320px at -10% 110%,rgba(52,211,153,.09),transparent 60%)}
+@keyframes amb{to{opacity:.55;transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="mode"><div class="tabs" style="grid-template-columns:1fr 1fr"><button id="m1" class="sel">💪 Fitness</button><button id="m2">💰 Economizando</button></div></div>
+<div class="app" id="fit">
+  <div class="card hero">
+    <div class="flame" id="flame">🔥</div>
+    <div><div class="big" id="streak">0</div><div class="sub" id="streakTxt">dias de sequência</div><div class="sub" id="rec"></div></div>
+  </div>
+  <div class="tabs"><button id="t1" class="sel">🏁 Treino</button><button id="t2">📈 Perf.</button><button id="t3">📘 Guia</button><button id="t4">🍽️ Dieta</button></div>
+
+  <div id="pg1" style="display:grid;gap:14px">
+    <div class="card"><h2>Esta semana</h2><div class="week" id="week"></div></div>
+    <div class="card ringwrap">
+      <div class="ring">
+        <svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="46" fill="none" stroke="#2a323d" stroke-width="12"/><circle id="arc" cx="55" cy="55" r="46" fill="none" stroke="#58e06b" stroke-width="12" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="289" style="transition:stroke-dashoffset .8s"/></svg>
+        <div class="c"><div><span id="pct">0%</span><small>da meta</small></div></div>
+      </div>
+      <div><div style="font-size:18px;font-weight:900" id="todayMin">0 min</div><div class="sub" id="goalTxt"></div></div>
+    </div>
+    <div class="card">
+      <h2>Registrar treino</h2>
+      <div class="chips four" id="chips"></div>
+      <label id="subL"></label><div class="seg auto" id="sub"></div>
+      <label>Duração: <span class="val" id="durV">30 min</span></label>
+      <input type="range" id="dur" min="5" max="180" step="5" value="30">
+      <div id="fields"></div>
+      <label>Intensidade percebida <i class="q" data-h="inten">?</i></label>
+      <div class="seg" id="seg"></div>
+      <div class="live" id="live"></div>
+      <button class="cta" id="done">Concluir treino</button>
+    </div>
+    <div class="card"><h2>Histórico</h2><div id="hist"></div></div>
+    <details class="card"><summary>⚙️ Ajustes (meta e peso)</summary>
+      <div class="row"><div><label>Meta diária (min)</label><input type="number" id="goal" min="5" max="300"></div><div><label>Peso (kg)</label><input type="number" id="peso" min="30" max="250"></div></div>
+    </details>
+  </div>
+
+  <div id="pg2" class="hide" style="display:grid;gap:14px">
+    <div class="chips four" id="pchips"></div>
+    <div id="perf" style="display:grid;gap:14px"></div>
+  </div>
+
+  <div id="pg3" class="hide" style="display:grid;gap:14px">
+    <div class="chips four" id="gchips"></div>
+    <div id="guia" style="display:grid;gap:14px"></div>
+  </div>
+
+  <div id="pg4" class="hide" style="display:grid;gap:14px">
+    <div id="dTop" style="display:grid;gap:14px"></div>
+    <div class="card">
+      <h2>Registrar alimento</h2>
+      <label>Refeição</label><select id="fref"></select>
+      <label>Alimento</label><select id="fsel"></select>
+      <div id="fman" class="hide">
+        <label>Nome do alimento</label><input type="text" id="fnome" placeholder="Ex.: Pizza">
+        <div class="row"><div><label>kcal</label><input type="number" id="fk" min="0"></div><div><label>Proteína (g)</label><input type="number" id="fp" min="0"></div></div>
+        <div class="row"><div><label>Carboidrato (g)</label><input type="number" id="fc" min="0"></div><div><label>Gordura (g)</label><input type="number" id="ff" min="0"></div></div>
+        <div class="sub">Informe os valores totais da porção.</div>
+      </div>
+      <label>Quantidade (g)</label><input type="number" id="fg" min="0" step="5" value="100">
+      <div class="sub" id="fprev" style="margin-top:10px"></div>
+      <button class="cta" id="fadd">Adicionar à planilha</button>
+    </div>
+    <div id="dBot" style="display:grid;gap:14px"></div>
+  </div>
+</div>
+<div class="app" id="eco" style="display:none">
+  <div class="card hero">
+    <div class="flame" id="eFlame">🪙</div>
+    <div><div class="big" id="eStreak">0</div><div class="sub" id="eStreakTxt">dias sem biscoito</div><div class="sub" id="eSaved"></div></div>
+  </div>
+  <div class="tabs" style="grid-template-columns:repeat(5,1fr)"><button id="et1" class="sel">🏠 Hoje</button><button id="et2">📈 Plano</button><button id="et3">💡 Guia</button><button id="et4">📒 Planilha</button><button id="et5">🏁 Final</button></div>
+
+  <div id="ep1" style="display:grid;gap:14px">
+    <div class="card"><h2>Últimos 7 dias</h2><div class="week" id="eWeek"></div></div>
+    <div class="card"><h2>Check-in de hoje <i class="q" data-h="eco:checkin">?</i></h2>
+      <div class="sub" id="eToday"></div>
+      <button class="cta" id="eOk">✅ Resisti ao biscoito</button>
+      <label>Se comprou, qual biscoito?</label><select id="eTipo"></select>
+      <button class="cta ghost" id="eSlip">🍪 Comprei hoje</button>
+    </div>
+    <div class="card"><h2>Meta de economia</h2><div id="eGoal"></div></div>
+    <div class="card"><h2>Marcos de sequência</h2><div class="stats" id="eMarcos"></div></div>
+    <details class="card"><summary>⚙️ Seu hábito e premissas</summary>
+      <div id="eHabits"></div>
+      <div class="row"><div><label>Rendimento (% ao ano)</label><input type="number" id="eTaxa" min="0" max="40" step="0.5"></div><div><label>Meta (R$)</label><input type="number" id="eMeta" min="10" step="50"></div></div>
+      <div class="row"><div><label>Dividendos: média (% ao ano)</label><input type="number" id="eDy" min="0" max="30" step="0.5"></div><div></div></div>
+    </details>
+  </div>
+
+  <div id="ep2" class="hide" style="display:grid;gap:14px">
+    <div class="card"><h2>Simulador de longo prazo <i class="q" data-h="eco:plano">?</i></h2>
+      <label>Horizonte: <span class="val" id="eAnosV"></span></label><input type="range" id="eAnos" min="1" max="40" step="1">
+      <label>Dias em que resisto: <span class="val" id="eAderV"></span></label><input type="range" id="eAder" min="30" max="100" step="5">
+    </div>
+    <div id="ePlan" style="display:grid;gap:14px"></div>
+  </div>
+
+  <div id="ep3" class="hide" style="display:grid;gap:14px"></div>
+
+  <div id="ep4" class="hide" style="display:grid;gap:14px"></div>
+
+  <div id="ep5" class="hide" style="display:grid;gap:14px"></div>
+</div>
+<div class="modal hide" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+// ===== Variáveis por modalidade =====
+// subs: variações com MET próprio · metrica: indicador principal de desempenho
+const ATIV = {
+  corrida:{nome:"Corrida",emoji:"🏃",subL:"Tipo de corrida",
+    subs:{rodagem:{n:"Rodagem",met:9.8},intervalado:{n:"Intervalado",met:11.5},longao:{n:"Longão",met:9.0},trilha:{n:"Trilha",met:10.0}},
+    metrica:"Pace (min/km)",menor:true},
+  natacao:{nome:"Natação",emoji:"🏊",subL:"Estilo",
+    subs:{crawl:{n:"Crawl",met:8.0},costas:{n:"Costas",met:6.0},peito:{n:"Peito",met:8.5},borboleta:{n:"Borboleta",met:11.0}},
+    metrica:"Ritmo (min/100 m)",menor:true},
+  ciclismo:{nome:"Ciclismo",emoji:"🚴",subL:"Modalidade",
+    subs:{estrada:{n:"Estrada",met:8.0},mtb:{n:"MTB",met:8.5},spinning:{n:"Spinning",met:7.0}},
+    metrica:"Velocidade média (km/h)",menor:false},
+  musculacao:{nome:"Musculação",emoji:"🏋️",subL:"Grupo muscular",
+    subs:{peito:{n:"Peito",met:5.0},costas:{n:"Costas",met:5.0},pernas:{n:"Pernas",met:6.0},ombros:{n:"Ombros",met:4.5},bracos:{n:"Braços",met:4.5},core:{n:"Core",met:4.0},full:{n:"Full body",met:6.0}},
+    metrica:"Volume (kg)",menor:false}
+};
+const INT={leve:{n:"Leve",m:0.8},moderada:{n:"Moderada",m:1},intensa:{n:"Intensa",m:1.25}};
+// Registro: {id,data,tipo,sub,min,dist(km | m na natação),ex:{piscina,elev,series,reps,carga},inten,kcal}
+
+const $=id=>document.getElementById(id);
+let st={logs:[],meta:20,peso:70,food:[]};
+try{const s=localStorage.getItem("seqfit");if(s)st=Object.assign(st,JSON.parse(s))}catch(e){}
+st.logs=st.logs.filter(l=>ATIV[l.tipo]&&l.sub&&ATIV[l.tipo].subs[l.sub]);if(!Array.isArray(st.food))st.food=[];
+const save=()=>{try{localStorage.setItem("seqfit",JSON.stringify(st))}catch(e){}};
+let sel="corrida",sub="rodagem",inten="moderada",psel="geral";
+
+const key=d=>{const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())};
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const minOn=k=>st.logs.filter(l=>l.data===k).reduce((a,l)=>a+l.min,0);
+const okDays=()=>[...new Set(st.logs.map(l=>l.data))].filter(k=>minOn(k)>=st.meta);
+const f1=(n,d=1)=>(+n).toLocaleString("pt-BR",{maximumFractionDigits:d,minimumFractionDigits:0});
+const pace=x=>{if(!isFinite(x)||x<=0)return "–";const m=Math.floor(x),s=Math.round((x-m)*60);return (s===60?m+1:m)+":"+String(s===60?0:s).padStart(2,"0")};
+const vol=l=>(l.ex.series||0)*(l.ex.reps||0)*(l.ex.carga||0);
+const kmOf=l=>l.tipo==="natacao"?l.dist/1000:l.dist||0;
+
+// métrica principal da sessão
+function metric(l){
+  if(l.tipo==="corrida")return l.dist>0?l.min/l.dist:null;
+  if(l.tipo==="natacao")return l.dist>0?l.min/(l.dist/100):null;
+  if(l.tipo==="ciclismo")return l.dist>0?l.dist/(l.min/60):null;
+  return vol(l)||null;
+}
+const fmtMetric=(t,v)=>v==null?"–":(t==="corrida"||t==="natacao")?pace(v):t==="ciclismo"?f1(v)+" km/h":f1(v,0)+" kg";
+const classe=r=>r<=5?"Força":r<=12?"Hipertrofia":"Resistência";
+
+function streaks(){
+  const set=new Set(okDays());let d=new Date();if(!set.has(key(d)))d=addD(d,-1);
+  let cur=0;while(set.has(key(d))){cur++;d=addD(d,-1)}
+  let best=0,run=0,prev=null;[...set].sort().forEach(k=>{const dt=new Date(k+"T00:00:00");run=(prev&&Math.round((dt-prev)/864e5)===1)?run+1:1;best=Math.max(best,run);prev=dt});
+  return{cur,best};
+}
+
+// ===== Formulário por modalidade =====
+const numIn=(id,l,ph,step)=>`<div><label>${l}</label><input type="number" id="${id}" min="0" step="${step||1}" placeholder="${ph||0}"></div>`;
+function buildForm(){
+  $("chips").innerHTML=Object.entries(ATIV).map(([k,a])=>`<button class="chip ${k===sel?"sel":""}" data-k="${k}"><span>${a.emoji}</span>${a.nome}</button>`).join("");
+  const A=ATIV[sel];if(!A.subs[sub])sub=Object.keys(A.subs)[0];
+  $("subL").innerHTML=A.subL+' <i class="q" data-h="'+sel+'">?</i>';
+  $("sub").innerHTML=Object.entries(A.subs).map(([k,s])=>`<div class="sw"><button class="${k===sub?"sel":""}" data-s="${k}">${s.n}</button><i class="q" data-h="${sel}:${k}">?</i></div>`).join("");
+  $("seg").innerHTML=Object.entries(INT).map(([k,i])=>`<button class="${k===inten?"sel":""}" data-i="${k}">${i.n}</button>`).join("");
+  let h="";
+  if(sel==="corrida")h=numIn("dist","Distância (km)","5.0","0.1");
+  if(sel==="natacao")h=`<div class="row">${numIn("dist","Distância (m)","1000",25)}<div><label>Piscina</label><select id="piscina"><option value="25">25 m</option><option value="50">50 m</option><option value="0">Águas abertas</option></select></div></div>`;
+  if(sel==="ciclismo")h=`<div class="row">${numIn("dist","Distância (km)","20","0.1")}${numIn("elev","Ganho de elevação (m)","0",10)}</div>`;
+  if(sel==="musculacao")h=`<div class="row">${numIn("series","Séries","4")}${numIn("reps","Repetições/série","10")}</div>${numIn("carga","Carga média (kg)","40","0.5")}`;
+  $("fields").innerHTML=h;
+  $("fields").querySelectorAll("input,select").forEach(e=>e.oninput=live);
+  live();
+}
+function read(){
+  const g=id=>$(id)?+$(id).value||0:0;
+  return{tipo:sel,sub,min:+$("dur").value,dist:g("dist"),inten,ex:{piscina:g("piscina"),elev:g("elev"),series:g("series"),reps:g("reps"),carga:g("carga")}};
+}
+const kcalOf=l=>Math.round(ATIV[l.tipo].subs[l.sub].met*INT[l.inten].m*st.peso*l.min/60);
+function live(){
+  $("durV").textContent=$("dur").value+" min";
+  const l=read(),m=metric(l),k=kcalOf(l);let a=["–",""],b=["–",""];
+  if(sel==="corrida"){a=[fmtMetric(sel,m),"pace /km"];b=[l.dist?f1(l.dist/(l.min/60))+" km/h":"–","velocidade"]}
+  if(sel==="natacao"){a=[fmtMetric(sel,m),"ritmo /100 m"];const v=l.ex.piscina?Math.round(l.dist/l.ex.piscina):0;b=[v?String(v):"–","travessias da piscina"]}
+  if(sel==="ciclismo"){a=[fmtMetric(sel,m),"média"];b=[l.dist?pace(l.min/l.dist):"–","pace /km"]}
+  if(sel==="musculacao"){a=[f1(vol(l),0)+" kg","volume total"];b=[l.ex.reps?classe(l.ex.reps):"–","foco do treino"]}
+  $("live").innerHTML=`<div><b>${a[0]}</b><span>${a[1]}</span></div><div><b>${b[0]}</b><span>${b[1]}</span></div><div><b>${k}</b><span>kcal</span></div>`;
+}
+
+// ===== Treino =====
+function renderTreino(){
+  const {cur,best}=streaks(),set=new Set(okDays()),tk=key(new Date()),tm=minOn(tk);
+  anim($("streak"),cur);$("streakTxt").textContent=cur===1?"dia de sequência":"dias de sequência";
+  $("flame").classList.toggle("on",cur>0);$("rec").textContent="Recorde: "+best+(best===1?" dia":" dias");
+  const nm=["D","S","T","Q","Q","S","S"];let h="";
+  for(let i=6;i>=0;i--){const d=addD(new Date(),-i),ok=set.has(key(d));h+=`<div><div class="day">${nm[d.getDay()]}</div><div class="dot ${ok?"ok":""} ${i===0?"today":""}">${ok?"✓":""}</div></div>`}
+  $("week").innerHTML=h;
+  const p=Math.min(1,tm/st.meta);$("arc").style.strokeDashoffset=289*(1-p);anim($("pct"),Math.round(p*100),v=>Math.round(v)+"%");
+  $("todayMin").textContent=tm+" min hoje";
+  $("goalTxt").textContent=tm>=st.meta?"Meta batida! Sequência garantida 🎉":"Faltam "+(st.meta-tm)+" min para manter a sequência";
+  const R=[...st.logs].reverse().slice(0,8);
+  $("hist").innerHTML=R.length?R.map(l=>{const A=ATIV[l.tipo],dt=l.data.split("-").reverse().slice(0,2).join("/");
+    const det=l.tipo==="musculacao"?`${l.ex.series}×${l.ex.reps} · ${l.ex.carga} kg`:`${f1(l.dist,2)} ${l.tipo==="natacao"?"m":"km"} · ${fmtMetric(l.tipo,metric(l))}`;
+    return `<div class="item"><div class="e">${A.emoji}</div><div class="t">${A.nome} · ${A.subs[l.sub].n}<small>${dt} · ${l.min} min · ${det} · ${l.kcal} kcal</small></div><button class="del" data-id="${l.id}">✕</button></div>`}).join(""):'<div class="empty">Nenhum treino ainda. Comece hoje!</div>';
+}
+
+// ===== Performance =====
+const card=(v,l)=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`;
+function bars(vals,labels,lastHi=true){const mx=Math.max(...vals,0.0001);return `<div class="bars">${vals.map((v,i)=>`<div class="bar ${lastHi&&i===vals.length-1?"last":""}">${labels[i]}<i style="height:${Math.max(3,v/mx*88)}%"></i><span>${(labels.sub||[])[i]||""}</span></div>`).join("")}</div>`}
+function renderPerf(){
+  $("pchips").innerHTML=[["geral","📊","Geral"],...Object.entries(ATIV).map(([k,a])=>[k,a.emoji,a.nome])].map(([k,e,n])=>`<button class="chip ${k===psel?"sel":""}" data-k="${k}"><span>${e}</span>${n==="Musculação"?"Musc.":n}</button>`).join("");
+  const L=st.logs;let o="";
+  if(!L.length){$("perf").innerHTML='<div class="card empty">Registre treinos para ver sua performance.</div>';return}
+  if(psel==="geral"){
+    const min=L.reduce((a,l)=>a+l.min,0),kc=L.reduce((a,l)=>a+l.kcal,0);
+    o+=`<div class="card"><h2>Resumo</h2><div class="stats">${card(L.length,"treinos")}${card(Math.floor(min/60)+"h "+min%60+"m","tempo ativo")}${card(f1(kc,0),"kcal gastas")}${card(okDays().length,"dias de meta")}</div></div>`;
+    const wk=[];for(let i=5;i>=0;i--){const e=addD(new Date(),-7*i),s=addD(e,-6),a=key(s),b=key(e);wk.push(L.filter(l=>l.data>=a&&l.data<=b).reduce((x,l)=>x+l.min,0))}
+    o+=`<div class="card"><h2>Minutos por semana (últimas 6)</h2>${bars(wk,wk.map(v=>v||""))}</div>`;
+    const by=Object.keys(ATIV).map(k=>[k,L.filter(l=>l.tipo===k).reduce((a,l)=>a+l.min,0)]),mx=Math.max(...by.map(x=>x[1]),1);
+    o+=`<div class="card"><h2>Tempo por modalidade</h2>${by.map(([k,v])=>`<div class="hb"><span>${ATIV[k].emoji} ${ATIV[k].nome}</span><div><i style="width:${v/mx*100}%"></i></div><span>${v}′</span></div>`).join("")}</div>`;
+  }else{
+    const A=ATIV[psel],S=L.filter(l=>l.tipo===psel);
+    if(!S.length){$("perf").innerHTML=o+`<div class="card empty">Ainda sem treinos de ${A.nome.toLowerCase()}.</div>`;return}
+    const ms=S.map(metric).filter(x=>x!=null),min=S.reduce((a,l)=>a+l.min,0),km=S.reduce((a,l)=>a+kmOf(l),0);
+    const bestM=ms.length?(A.menor?Math.min(...ms):Math.max(...ms)):null,unitDist=psel==="natacao"?1000:1;
+    let cs=[],pr=[];
+    if(psel==="corrida"||psel==="natacao"){
+      const tot=S.reduce((a,l)=>a+(l.dist>0?l.min:0),0),td=S.reduce((a,l)=>a+l.dist,0),avg=td?(psel==="corrida"?tot/td:tot/(td/100)):null;
+      cs=[card(fmtMetric(psel,avg),"média geral"),card(fmtMetric(psel,bestM),"melhor"),card(f1(km*unitDist,0)+(psel==="natacao"?" m":" km"),"distância total"),card(S.length,"sessões")];
+      pr=[["Melhor "+A.metrica,fmtMetric(psel,bestM)],["Maior distância",f1(Math.max(...S.map(l=>l.dist)),1)+(psel==="natacao"?" m":" km")],["Maior duração",Math.max(...S.map(l=>l.min))+" min"]];
+    }
+    if(psel==="ciclismo"){
+      const td=S.reduce((a,l)=>a+l.dist,0),tt=S.reduce((a,l)=>a+(l.dist>0?l.min:0),0);
+      cs=[card(td?f1(td/(tt/60))+" km/h":"–","média geral"),card(fmtMetric(psel,bestM),"melhor"),card(f1(td,0)+" km","distância total"),card(f1(S.reduce((a,l)=>a+(l.ex.elev||0),0),0)+" m","elevação total")];
+      pr=[["Maior velocidade média",fmtMetric(psel,bestM)],["Maior distância",f1(Math.max(...S.map(l=>l.dist)),1)+" km"],["Maior ganho de elevação",f1(Math.max(...S.map(l=>l.ex.elev||0)),0)+" m"]];
+    }
+    if(psel==="musculacao"){
+      cs=[card(f1(S.reduce((a,l)=>a+vol(l),0),0)+" kg","volume total"),card(f1(bestM||0,0)+" kg","maior volume/sessão"),card(f1(Math.max(...S.map(l=>l.ex.carga||0)),1)+" kg","maior carga"),card(S.reduce((a,l)=>a+(l.ex.series||0),0),"séries totais")];
+      pr=[["Maior volume em uma sessão",f1(bestM||0,0)+" kg"],["Maior carga",f1(Math.max(...S.map(l=>l.ex.carga||0)),1)+" kg"],["Mais repetições/série",Math.max(...S.map(l=>l.ex.reps||0))]];
+    }
+    o+=`<div class="card"><h2>${A.nome} · visão geral</h2><div class="stats">${cs.join("")}</div></div>`;
+    const last=S.filter(l=>metric(l)!=null).slice(-10),vals=last.map(metric);
+    if(vals.length){
+      const labels=vals.map(v=>fmtMetric(psel,v).replace(" km/h","").replace(" kg",""));
+      let tr="";if(vals.length>=2){const prev=vals.slice(0,-1).reduce((a,b)=>a+b,0)/(vals.length-1),c=(vals[vals.length-1]-prev)/prev*100,good=A.menor?c<0:c>0;tr=`<div class="trend">Última sessão vs. média anterior: <b class="${good?"up":"dn"}">${c>0?"+":""}${f1(c)}%</b> ${good?"— evoluindo 💪":"— abaixo da média"}</div>`}
+      o+=`<div class="card"><h2>${A.metrica} · últimas ${vals.length} sessões</h2>${bars(vals,labels)}${tr}</div>`;
+    }
+    const sb=Object.entries(A.subs).map(([k,s])=>[s.n,S.filter(l=>l.sub===k).length]).filter(x=>x[1]),mc=Math.max(...sb.map(x=>x[1]));
+    o+=`<div class="card"><h2>Recordes pessoais 🏆</h2>${pr.map(r=>`<div class="pr"><span>${r[0]}</span><b>${r[1]}</b></div>`).join("")}</div>`;
+    o+=`<div class="card"><h2>${A.subL} mais treinado</h2>${sb.map(([n,c])=>`<div class="hb"><span>${n}</span><div><i style="width:${c/mc*100}%"></i></div><span>${c}×</span></div>`).join("")}</div>`;
+  }
+  $("perf").innerHTML=o;
+}
+const render=()=>{renderTreino();renderPerf();renderGuia();renderDieta();live()};
+
+
+// ===== Ajuda (?) =====
+const HELP={
+"corrida":["🏃 Corrida","Deslocamento a pé com fase de voo, contínuo ou em tiros. Você registra distância e tempo; o app calcula o pace (min/km).","Comece num ritmo em que ainda consiga conversar."],
+"natacao":["🏊 Natação","Deslocamento na água combinando braçadas, pernadas e respiração. Registre a distância em metros e o tipo de piscina; o app calcula o ritmo por 100 m.","Em piscina de 25 m, cada travessia (de uma borda à outra) vale 25 m."],
+"ciclismo":["🚴 Ciclismo","Pedalada em bicicleta, na rua, em trilha ou indoor. Registre distância e elevação; o app calcula a velocidade média.","Ajuste a altura do selim antes de pedalar."],
+"musculacao":["🏋️ Musculação","Exercícios com carga (pesos, máquinas ou o próprio corpo) em séries e repetições. O volume é séries × repetições × carga.","Escolha uma carga que deixe 1 a 3 repetições sobrando no fim da série."],
+"corrida:rodagem":["Rodagem","Corrida contínua em ritmo confortável e constante (dá para conversar), geralmente de 30 a 60 min. É a base aeróbica do treino.","Frequência cardíaca por volta de 60–75% da máxima."],
+"corrida:intervalado":["Intervalado","Alterna tiros rápidos (ex.: 6 × 400 m forte) com trote ou caminhada de recuperação. Melhora velocidade e VO₂máx.","Aqueça 10 min e faça no máximo 1 vez por semana."],
+"corrida:longao":["Longão","A corrida mais longa da semana, em ritmo bem fácil, para construir resistência. Costuma ser de 25 a 35% do volume semanal.","Leve água e não aumente mais de 10% por semana."],
+"corrida:trilha":["Trilha","Corrida em terreno irregular (terra, pedras, subidas). Pede passos curtos, atenção ao chão e mais força de tornozelo.","Aceite um pace mais lento que na rua: o esforço é maior."],
+"natacao:crawl":["Crawl (livre)","Braçadas alternadas com cotovelo alto, pernada contínua e respiração lateral a cada 2–3 braçadas.","Deslize: estenda o braço à frente antes de puxar."],
+"natacao:costas":["Costas","Nado de barriga para cima, braçadas alternadas em arco e pernada contínua, com quadril alto e olhar para o teto.","Mantenha a cabeça parada, com as orelhas na água."],
+"natacao:peito":["Peito","Braçada simultânea em forma de coração, recuperação das pernas e chute em tesoura, com deslize entre os ciclos.","Não force a abertura dos joelhos, para proteger as articulações."],
+"natacao:borboleta":["Borboleta","Os dois braços saem juntos pela frente enquanto o corpo ondula, com duas batidas de perna por ciclo. É o estilo mais exigente.","Comece com séries curtas de 25 m."],
+"ciclismo:estrada":["Estrada","Pedalada em asfalto com bike de pneu fino, em ritmo contínuo ou em grupo, com cadência de 80–100 rpm.","Use marchas leves nas subidas e mantenha ritmo constante."],
+"ciclismo:mtb":["MTB","Pedalada em trilhas e terreno irregular, com subidas técnicas, descidas e controle de equilíbrio.","Alivie o corpo nas descidas e olhe sempre à frente."],
+"ciclismo:spinning":["Spinning","Pedalada indoor em bike ergométrica, em aula ou solo, alternando carga, cadência e posição (sentado ou em pé).","Ajuste selim e guidão antes de começar."],
+"musculacao:peito":["Peito","Supino, crucifixo e flexões: empurrar com peitoral, ombros e tríceps, com escápulas unidas e pés firmes.","Desça controlando a carga até perto do peito."],
+"musculacao:costas":["Costas","Puxadas e remadas (barra fixa, puxador, remada): puxar com dorsais e bíceps, peito aberto e coluna neutra.","Pense em levar os cotovelos para trás, não só as mãos."],
+"musculacao:pernas":["Pernas","Agachamento, leg press, afundo, stiff, extensora e flexora: trabalham quadríceps, posteriores e glúteos.","Joelhos alinhados com os pés e tronco firme."],
+"musculacao:ombros":["Ombros","Desenvolvimento, elevação lateral e frontal: foco no deltoide, com cargas moderadas e movimento controlado.","Evite balançar o tronco para subir a carga."],
+"musculacao:bracos":["Braços","Rosca (bíceps) e tríceps na polia ou testa: movimentos isolados com os cotovelos fixos ao lado do corpo.","Amplitude completa vale mais que carga alta."],
+"musculacao:core":["Core","Prancha, abdominal e elevação de pernas: estabilizam e fortalecem abdômen e lombar.","Mantenha o abdômen contraído e a lombar neutra."],
+"musculacao:full":["Full body","Corpo inteiro numa só sessão, com exercícios multiarticulares (agachamento, supino, remada, desenvolvimento).","Boa opção para 2–3 vezes por semana, com descanso entre os dias."],
+"inten":["Intensidade percebida","Quanto o treino pareceu pesado: Leve (consegue conversar, 3–4 de 10), Moderada (só frases curtas, 5–7 de 10) ou Intensa (quase sem falar, 8–10 de 10). Ela ajusta as calorias estimadas.","Na dúvida, use o teste da fala."]};
+function help(k){const d=HELP[k];if(!d)return;$("sheet").innerHTML=`<h3>${d[0]}</h3><p><b>Como é feita</b><br>${d[1]}</p><p><b>Dica</b><br>${d[2]}</p><button class="cta" id="mc">Entendi</button>`;$("modal").classList.remove("hide");$("mc").onclick=()=>$("modal").classList.add("hide")}
+document.addEventListener("click",e=>{const q=e.target.closest(".q");if(q){e.preventDefault();help(q.dataset.h)}});
+$("modal").onclick=e=>{if(e.target.id==="modal")$("modal").classList.add("hide")};
+
+// ===== Guia de procedimentos =====
+const REC={
+geral:[["Meta semanal","150 a 300 min por semana de atividade moderada (ou 75 a 150 min intensa), segundo a OMS, mais 2 dias de exercícios de força."],["Descanso","Pelo menos 1 dia de recuperação completa por semana e 7–9 h de sono por noite."],["Hidratação","Cerca de 35 ml por kg ao dia, mais 500 ml por hora de treino."],["Constância","A sequência vale mais que um treino perfeito: prefira sessões curtas todos os dias a uma longa isolada."]],
+corrida:[["Aquecimento","5–10 min de caminhada ou trote leve, mobilidade de quadril e tornozelo e 2–3 progressivos de 20 s."],["Execução","Passada curta, cadência de 170–180 passos/min, tronco ereto, braços a 90° e pé aterrissando sob o quadril. Nas rodagens, respire de forma que consiga conversar."],["Progressão","Aumente no máximo 10% do volume por semana, faça 1 semana leve a cada 3 e mantenha ~80% do volume em ritmo fácil."],["Frequência","3–4 vezes por semana, com no máximo 1 treino intervalado."],["Segurança","Troque o tênis a cada 600–800 km, pare se a dor for aguda ou piorar e hidrate-se."],["Volta à calma","5 min de trote ou caminhada e alongamento leve de panturrilha, quadríceps e posteriores."]],
+natacao:[["Aquecimento","200–400 m soltos misturando estilos, com educativos (batida de perna, um braço só)."],["Execução","Corpo alinhado, cabeça neutra, rotação de quadril e ombros, cotovelo alto na braçada e respiração bilateral a cada 3 braçadas, soltando o ar na água."],["Progressão","Aumente cerca de 10% da distância por semana. Use séries (ex.: 8 × 100 m com 20 s de pausa) e reduza a pausa aos poucos."],["Frequência","2–4 vezes por semana, em dias alternados."],["Segurança","Nunca nade sozinho em águas abertas, use boia de sinalização e hidrate-se mesmo dentro d’água."],["Volta à calma","100–200 m bem leves e alongamento de ombros e peitoral."]],
+ciclismo:[["Aquecimento","10 min em cadência leve (80–90 rpm), subindo a intensidade aos poucos."],["Execução","Selim na altura em que o joelho fica levemente flexionado (25–35°) no ponto mais baixo, cotovelos soltos, costas neutras e cadência de 80–100 rpm."],["Progressão","Aumente primeiro o tempo, depois a intensidade. Faça 1 treino longo por semana (+10%) e 1 de subidas ou intervalos."],["Frequência","2–4 vezes por semana."],["Segurança","Capacete, luzes e atenção ao trânsito. Em saídas acima de 90 min, leve água e um lanche."],["Volta à calma","5–10 min leves e alongamento de quadríceps, posteriores e lombar."]],
+musculacao:[["Aquecimento","5 min de cardio leve e 1–2 séries leves (cerca de 50% da carga) do primeiro exercício."],["Execução","Descida controlada de 2–3 s, amplitude completa, coluna neutra e expiração no esforço. Termine a série com 1–3 repetições de reserva."],["Progressão","Sobrecarga progressiva: ao completar todas as séries no topo da faixa de repetições, suba 2–5% da carga. Força: 3–5 reps; hipertrofia: 6–12; resistência: 13 ou mais."],["Frequência","Cada grupo muscular 2 vezes por semana, com 48 h de descanso entre treinos do mesmo grupo e 3–5 séries por exercício."],["Segurança","Peça ajuda (spotter) com cargas altas, não prenda a respiração e interrompa em caso de dor articular."],["Volta à calma","Alongamento leve, proteína na refeição seguinte e sono de qualidade."]]
+};
+let gsel="geral";
+const chipsHtml=s=>[["geral","📊","Geral"],...Object.entries(ATIV).map(([k,a])=>[k,a.emoji,k==="musculacao"?"Musc.":a.nome])].map(([k,e,n])=>`<button class="chip ${k===s?"sel":""}" data-k="${k}"><span>${e}</span>${n}</button>`).join("");
+function tips(sel){
+  const o=[],L=st.logs,now=new Date(),tk=key(now),a7=key(addD(now,-6)),a14=key(addD(now,-13));
+  const S=sel==="geral"?L:L.filter(l=>l.tipo===sel);
+  if(!S.length)return ["Sem dados ainda: faça 2 sessões leves nesta semana para criar uma base e iniciar a sequência."];
+  const dd=Math.round((new Date(tk+"T00:00:00")-new Date(S[S.length-1].data+"T00:00:00"))/864e5);
+  o.push(dd===0?"Você já treinou hoje: priorize hidratação e recuperação.":"Último treino"+(sel==="geral"?"":" de "+ATIV[sel].nome.toLowerCase())+" há "+dd+(dd===1?" dia.":" dias.")+(dd>=4?" Retome com uma sessão leve.":""));
+  const w=S.filter(l=>l.data>=a7),p=S.filter(l=>l.data<a7&&l.data>=a14);
+  if(sel==="geral"){const m=w.reduce((a,l)=>a+l.min,0);o.push("Você acumulou "+m+" min nos últimos 7 dias (referência da OMS: 150)."+(m<150?" Faltam "+(150-m)+" min.":" Meta atingida!"))}
+  else if(sel==="musculacao"){const miss=Object.entries(ATIV.musculacao.subs).filter(([k])=>!w.some(l=>l.sub===k)).map(([k,v])=>v.n);if(miss.length&&miss.length<7)o.push("Sem treino nos últimos 7 dias: "+miss.join(", ")+".");const vw=w.reduce((a,l)=>a+vol(l),0),vp=p.reduce((a,l)=>a+vol(l),0);if(vp>0)o.push("Volume da semana: "+f1(vw,0)+" kg ("+(vw>=vp?"+":"")+f1((vw-vp)/vp*100,0)+"% vs. semana anterior).")}
+  else{const kw=w.reduce((a,l)=>a+kmOf(l),0),kp=p.reduce((a,l)=>a+kmOf(l),0);if(kp>0){const c=(kw-kp)/kp*100;o.push(c>10?"Seu volume subiu "+f1(c,0)+"% vs. a semana anterior, acima dos 10% recomendados. Reduza um pouco para evitar lesões.":"Volume da semana: "+(c>=0?"+":"")+f1(c,0)+"% vs. a anterior. Progressão segura; pode subir até 10% na próxima.")}else o.push("Volume desta semana: "+f1(kw,1)+" km.")}
+  if(w.length>=3){const n=w.filter(l=>l.inten==="intensa").length;if(n/w.length>.5)o.push("Mais da metade das sessões da semana foi intensa. Inclua treinos leves para recuperar.");else if(!n)o.push("Nenhum treino intenso na semana: uma sessão mais forte por semana ajuda a evoluir.")}
+  return o;
+}
+function renderGuia(){
+  $("gchips").innerHTML=chipsHtml(gsel);
+  const t=gsel==="geral"?"Geral":ATIV[gsel].nome;
+  $("guia").innerHTML=`<div class="card"><h2>Para você</h2>${tips(gsel).map(x=>`<div class="tip">${x}</div>`).join("")}</div><div class="card"><h2>${t} · procedimento recomendado</h2>${REC[gsel].map(r=>`<div class="rec"><b>${r[0]}</b>${r[1]}</div>`).join("")}</div>`;
+}
+
+// ===== Alimentação =====
+// nome, kcal, proteína, carboidrato, gordura (por 100 g)
+const FOODS=[["Arroz branco cozido",128,2.5,28,.2],["Feijão cozido",76,4.8,14,.5],["Frango grelhado",159,32,0,3],["Ovo cozido",155,13,1.1,11],["Banana",89,1.1,23,.3],["Aveia em flocos",394,14,67,8],["Pão integral",253,9.4,43,3.4],["Batata-doce cozida",77,.6,18,.1],["Iogurte natural",61,3.5,4.7,3.3],["Leite desnatado",35,3.4,5,.1],["Atum em água",116,26,0,1],["Tilápia grelhada",128,26,0,2.7],["Patinho grelhado",219,32,0,9],["Queijo cottage",98,11,3.4,4.3],["Macarrão cozido",158,5.8,31,.9],["Mandioca cozida",125,.6,30,.3],["Maçã",52,.3,14,.2],["Abacate",160,2,9,15],["Amendoim",567,26,16,49],["Castanha-do-pará",656,14,12,66],["Azeite de oliva",884,0,0,100],["Brócolis cozido",35,2.4,7,.4],["Mel",304,.3,82,0],["Pasta de amendoim",588,25,20,50]];
+const FREF=["Café da manhã","Almoço","Lanche","Jantar","Pré-treino","Pós-treino"];
+const r0=n=>Math.round(n);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function targets(k){const tr=st.logs.filter(l=>l.data===k).reduce((a,l)=>a+l.kcal,0),kc=r0(st.peso*30+tr),p=r0(st.peso*1.6),f=r0(kc*.25/9),c=Math.max(0,r0((kc-p*4-f*9)/4));return{kcal:kc,p,c,f,tr}}
+const sumF=k=>st.food.filter(x=>x.data===k).reduce((a,x)=>({n:a.n+1,kcal:a.kcal+x.kcal,p:a.p+x.p,c:a.c+x.c,f:a.f+x.f}),{n:0,kcal:0,p:0,c:0,f:0});
+const mbar=(l,v,t,u)=>`<div class="mb"><div class="h"><span>${l}</span><span><b>${f1(v,0)}</b> / ${f1(t,0)} ${u}</span></div><div class="t"><i style="width:${Math.min(100,t?v/t*100:0)}%;${v>t*1.1?"background:#ff6b6b":""}"></i></div></div>`;
+function fcalc(){const v=$("fsel").value,g=+$("fg").value||0;
+  if(v==="x")return{nome:$("fnome").value.trim()||"Alimento",g,kcal:+$("fk").value||0,p:+$("fp").value||0,c:+$("fc").value||0,f:+$("ff").value||0};
+  const F=FOODS[+v],m=g/100;return{nome:F[0],g,kcal:F[1]*m,p:F[2]*m,c:F[3]*m,f:F[4]*m}}
+function fprev(){const c=fcalc();$("fman").classList.toggle("hide",$("fsel").value!=="x");$("fprev").textContent=r0(c.kcal)+" kcal · P "+f1(c.p)+" g · C "+f1(c.c)+" g · G "+f1(c.f)+" g"}
+function sugest(T,S,tk){
+  const out=[],eaten=new Set(st.food.filter(x=>x.data===tk).map(x=>x.nome)),tr=st.logs.filter(l=>l.data===tk);
+  if(!S.n)out.push(["Comece pela primeira refeição","Registre o que comeu e as sugestões passam a considerar o que ainda falta para a meta."]);
+  [["proteína",2,T.p-S.p,250,10,10],["carboidrato",3,T.c-S.c,300,15,15],["gordura boa",4,T.f-S.f,40,8,10]].forEach(([nm,i,gap,cap,min,th])=>{
+    if(gap<min)return;
+    const L=FOODS.filter(f=>f[i]>=th&&!eaten.has(f[0])).sort((a,b)=>b[i]/b[1]-a[i]/a[1]).slice(0,4);
+    out.push(["Faltam "+r0(gap)+" g de "+nm,L.map(f=>{const g=Math.max(15,Math.min(cap,r0(gap/(f[i]/100)/5)*5));return `<div>${g} g de ${f[0].toLowerCase()}<small>≈ ${r0(g*f[i]/100)} g de ${nm.split(" ")[0]} · ${r0(g*f[1]/100)} kcal</small></div>`}).join("")])});
+  if(tr.length){
+    if(!st.food.some(x=>x.data===tk&&x.ref==="Pós-treino")){const l=tr[tr.length-1];
+      out.push(["Pós-treino ("+ATIV[l.tipo].nome.toLowerCase()+")",l.tipo==="musculacao"?"20–30 g de proteína com carboidrato em até 2 h. Ex.: iogurte natural com banana e aveia, ou frango com batata-doce.":l.tipo==="natacao"?"A natação abre o apetite: banana com iogurte natural e pão integral com ovo.":"Reponha carboidrato e proteína em até 1–2 h"+(l.min>=60?" (treino longo: priorize o carboidrato)":"")+". Ex.: arroz com frango, ou pão com ovo e uma fruta."])}
+  }else out.push(["Antes do treino (1–2 h)","Carboidrato de fácil digestão e pouca gordura: banana com aveia, ou pão integral com mel."]);
+  if(S.kcal>T.kcal*1.1)out.push(["Acima da meta calórica","Você passou "+r0(S.kcal-T.kcal)+" kcal. Nas próximas refeições prefira vegetais (ex.: brócolis), proteínas magras e menos gordura."]);
+  if(S.n&&out.length===0)out.push(["Dia dentro da meta 🎉","Seus macros estão equilibrados. Mantenha a hidratação."]);
+  return out;
+}
+function renderDieta(){
+  const now=new Date(),tk=key(now),T=targets(tk),S=sumF(tk),rows=st.food.filter(x=>x.data===tk),tm=st.logs.filter(l=>l.data===tk).reduce((a,l)=>a+l.min,0);
+  $("dTop").innerHTML=`<div class="card"><h2>Meta de hoje</h2>${mbar("Calorias",S.kcal,T.kcal,"kcal")}${mbar("Proteína",S.p,T.p,"g")}${mbar("Carboidrato",S.c,T.c,"g")}${mbar("Gordura",S.f,T.f,"g")}<div class="sub">Base de ${r0(st.peso*30)} kcal + ${T.tr} kcal de treino · Água ≈ ${f1(st.peso*.035+tm/60*.5,1)} L</div></div>`;
+  let o=`<div class="card"><h2>Planilha de hoje</h2><div class="tw"><table><thead><tr><th>Refeição / alimento</th><th>g</th><th>kcal</th><th>P</th><th>C</th><th>G</th><th></th></tr></thead><tbody>${rows.length?rows.map(x=>`<tr><td>${x.ref}<br><small style="color:var(--mu)">${esc(x.nome)}</small></td><td>${x.g}</td><td>${x.kcal}</td><td>${f1(x.p)}</td><td>${f1(x.c)}</td><td>${f1(x.f)}</td><td><button class="del" data-fid="${x.id}">✕</button></td></tr>`).join(""):'<tr><td colspan="7" style="text-align:center;color:var(--mu)">Nenhum alimento hoje</td></tr>'}</tbody><tfoot><tr><td>Total</td><td></td><td>${r0(S.kcal)}</td><td>${f1(S.p)}</td><td>${f1(S.c)}</td><td>${f1(S.f)}</td><td></td></tr></tfoot></table></div></div>`;
+  o+=`<div class="card"><h2>Sugestões para você</h2>${sugest(T,S,tk).map(x=>`<div class="sg"><b>${x[0]}</b>${x[1]}</div>`).join("")}</div>`;
+  let w="";for(let i=0;i<7;i++){const k=key(addD(now,-i)),s=sumF(k),t=targets(k),d=k.split("-").reverse().slice(0,2).join("/");
+    w+=s.n?`<tr><td>${d}</td><td>${r0(s.kcal)}</td><td>${r0(s.p)}</td><td>${r0(s.c)}</td><td>${r0(s.f)}</td><td>${t.tr}</td><td style="color:${s.kcal>t.kcal*1.1?"#ff6b6b":"var(--ac)"}">${s.kcal>=t.kcal?"+":""}${r0(s.kcal-t.kcal)}</td></tr>`:`<tr><td>${d}</td><td colspan="6" style="color:var(--mu)">sem registro</td></tr>`}
+  o+=`<div class="card"><h2>Planilha dos últimos 7 dias</h2><div class="tw"><table><thead><tr><th>Dia</th><th>kcal</th><th>P</th><th>C</th><th>G</th><th>Treino</th><th>Saldo</th></tr></thead><tbody>${w}</tbody></table></div><div class="sub" style="margin-top:10px">Saldo = calorias ingeridas − meta do dia. Valores estimados; não substituem a orientação de um nutricionista.</div></div>`;
+  $("dBot").innerHTML=o;
+}
+
+// ===== Eventos =====
+function tab(n){for(let i=1;i<=4;i++){$("pg"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("sel",i===n)}enter($("pg"+n));window.scrollTo(0,0)}
+[1,2,3,4].forEach(i=>$("t"+i).onclick=()=>tab(i));
+$("gchips").onclick=e=>{const b=e.target.closest(".chip");if(b){gsel=b.dataset.k;renderGuia()}};
+$("dBot").onclick=e=>{const b=e.target.closest(".del");if(b){st.food=st.food.filter(x=>x.id!=b.dataset.fid);save();renderDieta()}};
+["fsel","fg","fnome","fk","fp","fc","ff"].forEach(i=>$(i).oninput=fprev);
+$("fadd").onclick=()=>{const c=fcalc();if(!(c.g>0||c.kcal>0)){toast("Informe a quantidade");return}
+  st.food.push({id:Date.now(),data:key(new Date()),ref:$("fref").value,nome:c.nome,g:r0(c.g),kcal:r0(c.kcal),p:Math.round(c.p*10)/10,c:Math.round(c.c*10)/10,f:Math.round(c.f*10)/10});
+  save();renderDieta();toast("✓ Alimento adicionado");};
+$("chips").onclick=e=>{const b=e.target.closest(".chip");if(b){sel=b.dataset.k;sub=Object.keys(ATIV[sel].subs)[0];buildForm()}};
+$("sub").onclick=e=>{const b=e.target.closest("button");if(b){sub=b.dataset.s;buildForm()}};
+$("seg").onclick=e=>{const b=e.target.closest("button");if(b){inten=b.dataset.i;buildForm()}};
+$("pchips").onclick=e=>{const b=e.target.closest(".chip");if(b){psel=b.dataset.k;renderPerf()}};
+$("dur").oninput=live;
+$("goal").onchange=()=>{st.meta=Math.max(5,+$("goal").value||20);save();render()};
+$("peso").onchange=()=>{st.peso=Math.max(30,+$("peso").value||70);save();live()};
+$("hist").onclick=e=>{const b=e.target.closest(".del");if(b){st.logs=st.logs.filter(l=>l.id!=b.dataset.id);save();render()}};
+
+function confetti(){const cs=["#58e06b","#ff9f1c","#4cc9f0","#f72585","#ffd166"];
+  for(let i=0;i<36;i++){const p=document.createElement("div");p.className="pc";p.style.background=cs[i%5];
+    p.style.setProperty("--x",(Math.random()*300-150)+"px");p.style.setProperty("--y",(Math.random()*-260-40)+"px");p.style.setProperty("--r",(Math.random()*720)+"deg");
+    document.body.appendChild(p);setTimeout(()=>p.remove(),1200)}}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600)}
+
+$("done").onclick=()=>{
+  const l=read();
+  if(sel==="musculacao"&&!(l.ex.series&&l.ex.reps)){toast("Informe séries e repetições");return}
+  if(sel!=="musculacao"&&!l.dist){toast("Informe a distância");return}
+  const tk=key(new Date()),before=minOn(tk)>=st.meta;
+  l.id=Date.now();l.data=tk;l.kcal=kcalOf(l);st.logs.push(l);save();
+  buildForm();render();floatText($("done"),"+"+l.kcal+" kcal 🔥");
+  const after=minOn(tk)>=st.meta;
+  if(after&&!before){confetti();pulse(document.querySelector(".ring"));const s=$("streak");s.classList.remove("pop");void s.offsetWidth;s.classList.add("pop");const c=streaks().cur;toast("🔥 Sequência de "+c+(c===1?" dia!":" dias!"))}
+  else toast("✓ Treino registrado!");
+};
+
+// ===== Efeitos =====
+function enter(el){el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
+function pulse(el){if(!el)return;el.classList.remove("pulse");void el.offsetWidth;el.classList.add("pulse")}
+function shake(el){if(!el)return;el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake")}
+function anim(el,to,fmt){fmt=fmt||(v=>Math.round(v));const from=el._v==null?0:el._v;el._v=to;cancelAnimationFrame(el._r);
+  if(from===to){el.textContent=fmt(to);return}
+  const t0=performance.now(),D=700,step=t=>{const p=Math.min(1,(t-t0)/D),e=1-Math.pow(1-p,3);el.textContent=fmt(from+(to-from)*e);if(p<1)el._r=requestAnimationFrame(step)};el._r=requestAnimationFrame(step)}
+function floatText(btn,txt){const r=btn.getBoundingClientRect(),e=document.createElement("div");e.className="fl";e.textContent=txt;e.style.left=(r.left+r.width/2)+"px";e.style.top=r.top+"px";document.body.appendChild(e);setTimeout(()=>e.remove(),1300)}
+function coins(){for(let i=0;i<18;i++){const c=document.createElement("div");c.className="coin";c.textContent="🪙";c.style.left=(Math.random()*95)+"vw";c.style.animationDuration=(1.4+Math.random()*1.2)+"s";c.style.animationDelay=(Math.random()*.4)+"s";c.style.fontSize=(18+Math.random()*16)+"px";document.body.appendChild(c);setTimeout(()=>c.remove(),3200)}}
+
+// ===== Modo Economia =====
+st.eco=Object.assign({preco:4,pac:5,taxa:10,meta:500,anos:10,ader:90,dy:7,logs:[]},st.eco||{});
+// marcas de biscoito recheado (cadastráveis): kcal por pacote
+if(!st.eco.brands)st.eco.brands={recheado:{n:"Recheado (genérico)",e:"🍪",kcal:600},trakinas:{n:"Trakinas Meio a Meio",e:"🍫",kcal:580}};
+const CK=st.eco.brands;
+if(!st.eco.habit)st.eco.habit={recheado:{preco:st.eco.preco,pac:st.eco.pac}};
+Object.entries(CK).forEach(([k])=>{if(!st.eco.habit[k])st.eco.habit[k]={preco:k==="trakinas"?5:4,pac:0}});
+const Rf=n=>(+n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const eDia=()=>Math.max(0.01,Object.entries(CK).reduce((a,[k])=>a+st.eco.habit[k].preco*st.eco.habit[k].pac,0)/7); // custo diário do hábito
+const eKcalDia=()=>Object.entries(CK).reduce((a,[k,c])=>a+c.kcal*st.eco.habit[k].pac,0)/7;
+const eAv=()=>st.eco.logs.filter(l=>l.s==="ok").reduce((a,l)=>a+(l.k!=null?l.k:eKcalDia()),0);
+HELP["eco:checkin"]=["Check-in diário","Todo dia marque se resistiu ao biscoito recheado. Resistir conta como dia de sequência e soma o que você deixou de gastar (soma, por tipo de biscoito, de preço × pacotes por semana ÷ 7). Comprar zera a sequência, mas o histórico fica.","Recaída faz parte: recomece no dia seguinte."];
+HELP["eco:plano"]=["Como o plano é calculado","O aporte mensal é o custo diário do hábito × 30,4 dias × a % de dias em que você resiste. O valor investido usa juros compostos mensais: aporte × ((1 + i)ⁿ − 1) ÷ i, com i equivalente à taxa anual que você definir.","A taxa é uma hipótese editável: não há garantia, e a conta ignora impostos e inflação."];
+
+function eStreaks(){const set=new Set(st.eco.logs.filter(l=>l.s==="ok").map(l=>l.data));let d=new Date();if(!set.has(key(d)))d=addD(d,-1);
+  let cur=0;while(set.has(key(d))){cur++;d=addD(d,-1)}
+  let best=0,run=0,prev=null;[...set].sort().forEach(k=>{const dt=new Date(k+"T00:00:00");run=(prev&&Math.round((dt-prev)/864e5)===1)?run+1:1;best=Math.max(best,run);prev=dt});
+  return{cur,best}}
+function eSetDay(k,s,t){const E=st.eco;E.logs=E.logs.filter(l=>l.data!==k);if(s==="ok")E.logs.push({data:k,s,v:eDia(),k:eKcalDia()});else if(s){t=t||"recheado";E.logs.push({data:k,s,v:E.habit[t].preco,k:CK[t].kcal,t})}save()}
+
+function eRender(){
+  const E=st.eco,{cur,best}=eStreaks(),cd=eDia(),tk=key(new Date());
+  const sv=E.logs.filter(l=>l.s==="ok").reduce((a,l)=>a+l.v,0),nOk=E.logs.filter(l=>l.s==="ok").length;
+  anim($("eStreak"),cur);$("eStreakTxt").textContent=(cur===1?"dia":"dias")+" sem biscoito";
+  $("eFlame").classList.toggle("on",cur>0);
+  $("eSaved").textContent=Rf(sv)+" economizados · ≈ "+f1(eAv(),0)+" kcal evitadas · recorde "+best;
+  const nm=["D","S","T","Q","Q","S","S"];let h="";
+  for(let i=6;i>=0;i--){const d=addD(new Date(),-i),l=E.logs.find(x=>x.data===key(d));h+=`<div><div class="day">${nm[d.getDay()]}</div><div class="dot ${l?(l.s==="ok"?"ok":"bad"):""} ${i===0?"today":""}">${l?(l.s==="ok"?"✓":"✕"):""}</div></div>`}
+  $("eWeek").innerHTML=h;
+  const t=E.logs.find(l=>l.data===tk);
+  $("eToday").textContent=t?(t.s==="ok"?"Hoje: resistiu e guardou "+Rf(t.v)+" 🪙":"Hoje: comprou ("+Rf(t.v)+"). Amanhã você recomeça."):"Cada dia resistindo vale "+Rf(cd)+".";
+  const p=Math.min(100,sv/E.meta*100);
+  $("eGoal").innerHTML=`<div class="mb"><div class="h"><span><b>${Rf(sv)}</b></span><span>meta ${Rf(E.meta)}</span></div><div class="t"><i style="width:${p}%"></i></div></div><div class="sub">${sv>=E.meta?"Meta batida! 🎉 Defina uma nova em Ajustes.":"Faltam cerca de "+Math.ceil((E.meta-sv)/cd)+" dias resistindo para chegar lá."}</div>`;
+  $("eMarcos").innerHTML=[7,30,90,180,365].map(n=>`<div class="stat"><b>${best>=n?"🏅":"🔒"} ${n} dias</b><span>${Rf(n*cd)} guardados</span></div>`).join("");
+  ePlan();eGuia();eSheet();eFinal();
+}
+
+function ePlan(){
+  const E=st.eco,cd=eDia(),M=cd*30.4375*E.ader/100,i=Math.pow(1+E.taxa/100,1/12)-1,Y=E.anos;
+  const ap=y=>M*12*y,fv=y=>i>0?M*(Math.pow(1+i,12*y)-1)/i:ap(y);
+  $("eAnosV").textContent=Y+(Y===1?" ano":" anos");$("eAderV").textContent=E.ader+"%";
+  const mx=fv(Y)||1,X=y=>8+y/Y*300,Yv=v=>140-v/mx*125;let a=[],b=[];
+  for(let k=0;k<=40;k++){const y=Y*k/40;a.push(X(y).toFixed(1)+","+Yv(ap(y)).toFixed(1));b.push(X(y).toFixed(1)+","+Yv(fv(y)).toFixed(1))}
+  const svg=`<svg viewBox="0 0 320 160" width="100%"><line x1="8" y1="140" x2="312" y2="140" style="stroke:var(--line);stroke-width:2"/><polyline points="${a.join(" ")}" fill="none" style="stroke:var(--mu);stroke-width:2.5;stroke-dasharray:5 4"/><polyline points="${b.join(" ")}" fill="none" style="stroke:var(--ac);stroke-width:3.5;stroke-linecap:round"/><text x="8" y="156" style="fill:var(--mu);font-size:10px">hoje</text><text x="312" y="156" text-anchor="end" style="fill:var(--mu);font-size:10px">${Y} ${Y===1?"ano":"anos"}</text></svg>`;
+  const rows=[1,5,10,20,30].map(y=>`<tr><td>${y} ${y===1?"ano":"anos"}</td><td>${Rf(ap(y))}</td><td>${Rf(fv(y))}</td><td>${Rf(fv(y)-ap(y))}</td></tr>`).join("");
+  $("ePlan").innerHTML=`<div class="card"><h2>Em ${Y} ${Y===1?"ano":"anos"}</h2><div class="stats"><div class="stat"><b style="color:var(--ac)">${Rf(fv(Y))}</b><span>investido (com juros)</span></div><div class="stat"><b>${Rf(ap(Y))}</b><span>guardado (sem juros)</span></div><div class="stat"><b>${Rf(fv(Y)-ap(Y))}</b><span>rendimento</span></div><div class="stat"><b>${Rf(cd*365.25*Y)}</b><span>custo do hábito no período</span></div></div>${svg}<div class="sub">Linha dourada: investindo a ${f1(E.taxa)}% a.a. · tracejada: só guardando. Aporte mensal: ${Rf(M)}.</div></div>
+  <div class="card"><h2>Projeção por prazo</h2><div class="tw"><table><thead><tr><th>Prazo</th><th>Aporte</th><th>Investido</th><th>Juros</th></tr></thead><tbody>${rows}</tbody></table></div><div class="sub" style="margin-top:10px">Simulação com rendimento constante, sem impostos nem inflação. Não é recomendação de investimento.</div></div>`;
+}
+
+function eGuia(){
+  const E=st.eco,{cur}=eStreaks(),cd=eDia(),ly=E.logs.find(l=>l.data===key(addD(new Date(),-1))),tp=[];
+  tp.push("Cada dia resistindo vale "+Rf(cd)+"; em um mês, "+Rf(cd*30.4375)+".");
+  tp.push(ly&&ly.s==="slip"?"Ontem foi uma recaída. É normal: o que importa é recomeçar hoje.":cur===0?"Comece hoje: o primeiro dia de resistência já inicia a sequência.":"Sequência de "+cur+" dias: "+Rf(cur*cd)+" ficaram com você.");
+  const G=[["1. Meça o hábito","Veja quanto gasta por semana com biscoitos e ajuste preço e pacotes de cada tipo em Ajustes."],["2. Descubra o gatilho","Lanche da tarde, mercado com fome ou estresse? Planeje uma troca para esse momento."],["3. Troque","Fruta com aveia, iogurte natural, pipoca simples ou pão com ovo. Deixe de manter estoque em casa."],["4. Pague-se primeiro","No mesmo dia, transfira o valor economizado para uma conta separada. Se possível, automatize."],["5. Revise todo mês","Confira a planilha, comemore os marcos e ajuste a meta."]];
+  const V=[["Regra dos 10 minutos","Bateu a vontade? Espere 10 min e beba água. Muitas vezes ela passa."],["Compre com a lista","Vá ao mercado alimentado e com lista; evite o corredor de biscoitos."],["Recompensa sem comida","Use parte do valor economizado para algo que não seja comida, como um passeio ou um livro."]];
+  $("ep3").innerHTML=`<div class="card"><h2>Para você</h2>${tp.map(x=>`<div class="tip">${x}</div>`).join("")}</div><div class="card"><h2>Plano em 5 passos</h2>${G.map(r=>`<div class="rec"><b>${r[0]}</b>${r[1]}</div>`).join("")}</div><div class="card"><h2>Como vencer a vontade</h2>${V.map(r=>`<div class="rec"><b>${r[0]}</b>${r[1]}</div>`).join("")}</div><div class="card"><h2>Sobre guardar e investir</h2><div class="rec">Antes de investir, monte uma reserva de emergência (3 a 6 meses de despesas) em aplicação com liquidez diária. Depois, compare opções de renda fixa e diversificação conforme seu prazo e perfil. Rendimentos variam e não há garantia; considere impostos e inflação. Para decisões personalizadas, procure um profissional certificado.</div></div>`;
+}
+
+function eSheet(){
+  const E=st.eco,L=[...E.logs].sort((a,b)=>a.data<b.data?-1:1);let acc=0;const am={};L.forEach(l=>{acc+=l.s==="ok"?l.v:-l.v;am[l.data]=acc});
+  let r="";for(let i=0;i<14;i++){const k=key(addD(new Date(),-i)),l=E.logs.find(x=>x.data===k),d=k.split("-").reverse().slice(0,2).join("/");
+    r+=`<tr><td>${d}</td><td style="text-align:center"><button class="st" data-d="${k}">${l?(l.s==="ok"?"✅":(CK[l.t]||CK.recheado).e):"—"}</button></td><td>${l&&l.s==="ok"?Rf(l.v):"–"}</td><td>${l&&l.s==="slip"?Rf(l.v):"–"}</td><td>${l?Rf(am[k]):"–"}</td></tr>`}
+  const M={};L.forEach(l=>{const m=l.data.slice(0,7);M[m]=M[m]||{ok:0,sl:0,e:0,g:0};if(l.s==="ok"){M[m].ok++;M[m].e+=l.v}else{M[m].sl++;M[m].g+=l.v}});
+  const mr=Object.keys(M).sort().reverse().map(m=>{const x=M[m];return `<tr><td>${m.slice(5)}/${m.slice(0,4)}</td><td>${x.ok}</td><td>${x.sl}</td><td>${Rf(x.e)}</td><td>${Rf(x.g)}</td><td style="color:var(--ac)">${Rf(x.e-x.g)}</td></tr>`}).join("")||'<tr><td colspan="6" style="text-align:center;color:var(--mu)">Sem registros</td></tr>';
+  $("ep4").innerHTML=eCharts4()+`<div class="card"><h2>Planilha diária (toque no status para alterar)</h2><div class="tw"><table><thead><tr><th>Dia</th><th>Status</th><th>Economia</th><th>Gasto</th><th>Saldo</th></tr></thead><tbody>${r}</tbody></table></div></div><div class="card"><h2>Resumo por mês</h2><div class="tw"><table><thead><tr><th>Mês</th><th>Resistiu</th><th>Comprou</th><th>Economia</th><th>Gasto</th><th>Saldo</th></tr></thead><tbody>${mr}</tbody></table></div><div class="sub" style="margin-top:10px">Saldo = economia − gastos com biscoito.</div></div>`;
+}
+
+
+
+// ===== Gráficos (SVG) =====
+function svgBars(items,h=150){const W=320,n=items.length,pos=Math.max(...items.map(x=>x.v),0),neg=Math.max(...items.map(x=>-x.v),0),tot=(pos+neg)||1,H=h-28,y0=6+pos/tot*H,gap=W/n,bw=Math.max(5,Math.min(28,gap*.62));
+  let o=`<svg viewBox="0 0 ${W} ${h}" width="100%"><line x1="0" y1="${y0.toFixed(1)}" x2="${W}" y2="${y0.toFixed(1)}" style="stroke:var(--line);stroke-width:2"/>`;
+  items.forEach((x,i)=>{const bh=Math.abs(x.v)/tot*H,cx=gap*i+gap/2,y=x.v>=0?y0-bh:y0;o+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${(x.v?Math.max(bh,2):0).toFixed(1)}" rx="4" class="ba" style="fill:${x.c};animation-delay:${i*45}ms"/><text x="${cx.toFixed(1)}" y="${h-5}" text-anchor="middle" style="fill:var(--mu);font-size:9px">${x.l}</text>`});
+  return o+"</svg>"}
+function svgStack(items,ca,cb,h=150){const W=320,H=h-28,mx=Math.max(...items.map(x=>x.a+x.b),1),gap=W/items.length,bw=Math.max(8,Math.min(36,gap*.6)),b=H+6;
+  let o=`<svg viewBox="0 0 ${W} ${h}" width="100%"><line x1="0" y1="${b}" x2="${W}" y2="${b}" style="stroke:var(--line);stroke-width:2"/>`;
+  items.forEach((x,i)=>{const ha=x.a/mx*H,hb=x.b/mx*H,cx=gap*i+gap/2;o+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${(b-ha).toFixed(1)}" width="${bw.toFixed(1)}" height="${ha.toFixed(1)}" rx="3" class="ba" style="fill:${ca};animation-delay:${i*45}ms"/><rect x="${(cx-bw/2).toFixed(1)}" y="${(b-ha-hb).toFixed(1)}" width="${bw.toFixed(1)}" height="${hb.toFixed(1)}" rx="3" class="ba" style="fill:${cb};animation-delay:${i*45+200}ms"/><text x="${cx.toFixed(1)}" y="${h-5}" text-anchor="middle" style="fill:var(--mu);font-size:9px">${x.l}</text>`});
+  return o+"</svg>"}
+function svgLines(S,xl=["",""],h=170){const W=320,H=h-32,L=8,all=S.flatMap(s=>s.v),mx=Math.max(...all,0),mn=Math.min(...all,0),n=S[0].v.length,rg=(mx-mn)||1;
+  const X=i=>L+i/Math.max(n-1,1)*(W-2*L),Y=v=>8+(1-(v-mn)/rg)*H;
+  let o=`<svg viewBox="0 0 ${W} ${h}" width="100%"><line x1="${L}" y1="${Y(0).toFixed(1)}" x2="${W-L}" y2="${Y(0).toFixed(1)}" style="stroke:var(--line);stroke-width:2"/>`;
+  o+='<g class="rv">';S.forEach(s=>{o+=`<polyline points="${s.v.map((v,i)=>X(i).toFixed(1)+","+Y(v).toFixed(1)).join(" ")}" fill="none" style="stroke:${s.c};stroke-width:3;stroke-linecap:round;stroke-linejoin:round${s.d?";stroke-dasharray:5 4":""}"/>`});
+  o+="</g>";
+  return o+`<text x="${L}" y="${h-5}" style="fill:var(--mu);font-size:10px">${xl[0]}</text><text x="${W-L}" y="${h-5}" text-anchor="end" style="fill:var(--mu);font-size:10px">${xl[1]}</text></svg>`}
+const leg=a=>`<div class="sub" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">${a.map(x=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${x[1]};margin-right:5px"></i>${x[0]}</span>`).join("")}</div>`;
+
+function eTipoFill(){$("eTipo").innerHTML=Object.entries(CK).map(([k,c])=>`<option value="${k}">${c.e} ${esc(c.n)}</option>`).join("")}
+function eHabits(){const E=st.eco,sug=["Oreo","Chocolícia","Negresco","Passatempo","Bono","Toddy"];
+  $("eHabits").innerHTML=`<div class="tw"><table style="min-width:340px"><thead><tr><th>Marca</th><th>kcal/pac.</th><th>R$/pacote</th><th>Pac./sem.</th><th></th></tr></thead><tbody>${Object.entries(CK).map(([k,c])=>`<tr><td>${c.e} ${esc(c.n)}</td><td>≈${r0(c.kcal)}</td><td><input type="number" data-t="${k}" data-f="preco" min="0.5" step="0.5" value="${E.habit[k].preco}" style="padding:6px"></td><td><input type="number" data-t="${k}" data-f="pac" min="0" max="30" value="${E.habit[k].pac}" style="padding:6px"></td><td>${k==="recheado"?"":`<button class="del" data-b="${k}" title="Remover">✕</button>`}</td></tr>`).join("")}</tbody></table></div>
+  <div class="sub" style="margin-top:8px">Coloque pacotes por semana &gt; 0 só nas marcas que você compra.</div>
+  <h2 style="margin-top:18px">Cadastrar marca <i class="q" data-h="eco:marcas">?</i></h2>
+  <div class="sub">Preços e tabelas nutricionais variam por loja e marca, e não consegui obtê-los com segurança para todas. Cadastre com os dados do rótulo e o preço que você paga.</div>
+  <div class="chips" style="margin:10px 0">${sug.map(n=>`<button class="chip" data-s="${n}" style="padding:8px 2px;font-size:12px">${n}</button>`).join("")}</div>
+  <label>Nome da marca / sabor</label><input type="text" id="ebN" placeholder="Ex.: Oreo Original">
+  <div class="row"><div><label>Preço do pacote (R$)</label><input type="number" id="ebP" min="0.5" step="0.1"></div><div><label>Peso do pacote (g)</label><input type="number" id="ebW" min="10"></div></div>
+  <div class="row"><div><label>Porção do rótulo (g)</label><input type="number" id="ebG" min="5" value="30"></div><div><label>kcal por porção</label><input type="number" id="ebK" min="10"></div></div>
+  <div class="sub" id="ebV" style="margin-top:8px"></div>
+  <button class="cta" id="ebAdd">➕ Cadastrar marca</button>`}
+const ebKcal=()=>{const w=+$("ebW").value,g=+$("ebG").value,k=+$("ebK").value;return g>0?k*w/g:0};
+function ebAdd(){const n=$("ebN").value.trim(),p=+$("ebP").value,kc=ebKcal();
+  if(!n||!(p>0)||!(kc>0)){toast("Preencha nome, preço, peso, porção e kcal");return}
+  const id="m"+Date.now();CK[id]={n,e:"🍪",kcal:r0(kc)};st.eco.habit[id]={preco:p,pac:1};save();eHabits();eTipoFill();eRender();toast("✓ Marca cadastrada · ajuste os pacotes por semana")}
+$("eHabits").onclick=e=>{
+  const c=e.target.closest(".chip");if(c){$("ebN").value=c.dataset.s;$("ebP").focus();return}
+  const d=e.target.closest("[data-b]");if(d){const k=d.dataset.b;delete CK[k];delete st.eco.habit[k];save();eHabits();eTipoFill();eRender();return}
+  if(e.target.closest("#ebAdd"))ebAdd()};
+$("eHabits").oninput=e=>{if(["ebP","ebW","ebG","ebK"].includes(e.target.id)){const k=ebKcal();$("ebV").textContent=k>0?"≈ "+r0(k)+" kcal por pacote":""}};
+HELP["eco:marcas"]=["Marcas de recheado","Informe o nome, o preço que você paga, o peso do pacote e a porção do rótulo (g e kcal). O app calcula kcal por pacote = kcal da porção × peso do pacote ÷ porção.","Já vêm o recheado genérico (≈600 kcal/pacote) e o Trakinas Meio a Meio (138 kcal por 30 g, pacote de 126 g, ≈580 kcal, segundo tabelas públicas). O preço é editável e varia por loja."];
+function eCharts4(){
+  const E=st.eco,now=new Date(),b=[],pts=[],L=[...E.logs].sort((a,c)=>a.data<c.data?-1:1);
+  for(let i=13;i>=0;i--){const d=addD(now,-i),l=E.logs.find(x=>x.data===key(d));b.push({l:String(d.getDate()),v:l?(l.s==="ok"?l.v:-l.v):0,c:l&&l.s==="slip"?"#ff6b6b":"var(--ac)"})}
+  for(let i=29;i>=0;i--){const k=key(addD(now,-i));pts.push(L.filter(l=>l.data<=k).reduce((a,l)=>a+(l.s==="ok"?l.v:-l.v),0))}
+  return `<div class="card"><h2>Economia (+) e gasto (−) · 14 dias</h2>${svgBars(b)}${leg([["Resistiu","var(--ac)"],["Comprou","#ff6b6b"]])}</div><div class="card"><h2>Saldo acumulado · 30 dias</h2>${svgLines([{v:pts,c:"var(--ac)"}],["há 30 dias","hoje"])}<div class="sub">Hoje: <b>${Rf(pts[29])}</b></div></div>`}
+
+// ===== Planilha final: corpo × bolso × dividendos =====
+HELP["eco:final"]=["Planilha final","Reúne tudo em um só lugar: calorias gastas nos treinos (modo Fitness), calorias evitadas ao resistir ao biscoito, economia acumulada e uma estimativa de dividendos de ações.","Dividendos: a economia líquida é investida a uma média anual (padrão 7%) com dividendos reinvestidos, sem considerar valorização ou queda das ações nem impostos. É só uma simulação."];
+function eFinal(){
+  const E=st.eco,cd=eDia(),d=E.dy/100,Y=E.anos;
+  const ok=E.logs.filter(l=>l.s==="ok"),sl=E.logs.filter(l=>l.s==="slip");
+  const sv=ok.reduce((a,l)=>a+l.v,0),sp=sl.reduce((a,l)=>a+l.v,0),saldo=sv-sp,pos=Math.max(0,saldo);
+  const burn=st.logs.reduce((a,l)=>a+l.kcal,0),nTr=st.logs.length,mTr=st.logs.reduce((a,l)=>a+l.min,0);
+  const av=eAv(),totK=burn+av,cons=sl.reduce((a,l)=>a+(l.k!=null?l.k:(CK[l.t]||CK.recheado).kcal),0);
+  const M=cd*30.4375*E.ader/100;
+  const pv=(r,y)=>{const i=Math.pow(1+r,1/12)-1,nn=12*y;return i>0?M*(Math.pow(1+i,nn)-1)/i:M*nn};
+  const proj=r=>{const pat=pv(r,Y),ap=M*12*Y,dv=pat-ap;return{pat,ap,dv,ano:dv/Y,mes:dv/(12*Y)}};
+  const cen=[...new Set([5,7,10,E.dy])].sort((a,b)=>a-b),cc=["#4cc9f0","#c77dff","#34d399","#ff9f1c"];
+  const R=cen.map((p,j)=>({p,r:proj(p/100),c:p===E.dy?"var(--ac)":cc[j%4]})),cdi=proj(.1365),P=proj(d);
+  const sc=R.map(x=>`<tr${x.p===E.dy?' style="color:var(--ac);font-weight:900"':""}><td>${f1(x.p)}%${x.p===E.dy?" ★":""}</td><td>${Rf(x.r.pat)}</td><td>${Rf(x.r.dv)}</td><td>${Rf(x.r.ano)}</td><td>${Rf(x.r.mes)}</td></tr>`).join("");
+  const cmp=[["Treinos registrados",nTr+" ("+mTr+" min)","modo Fitness"],
+    ["Calorias gastas treinando",f1(burn,0)+" kcal","≈ "+f1(burn/7700,2)+" kg de gordura (referência aproximada)"],
+    ["Calorias evitadas (biscoitos)",f1(av,0)+" kcal",ok.length+" dias resistidos"],
+    ["Balanço calórico total",f1(totK,0)+" kcal","gastas + evitadas"],
+    ["Calorias consumidas em recaídas",f1(cons,0)+" kcal",sl.length+(sl.length===1?" dia":" dias")],
+    ["Economia bruta",Rf(sv),"dias resistidos × custo diário"],
+    ["Gasto em recaídas",Rf(sp),"preço do biscoito comprado"],
+    ["Saldo da economia",Rf(saldo),"economia − gastos"],
+    ["Dividendos estimados hoje",Rf(pos*d)+"/ano","à média de "+f1(E.dy)+"% a.a. · "+Rf(pos*d/12)+"/mês"],
+    ["R$ por 1.000 kcal",totK>0?Rf(saldo/(totK/1000)):"–","relação corpo × bolso"]];
+  const M2={};const g=m=>M2[m]=M2[m]||{tr:0,kb:0,ev:0,e:0,g:0};
+  st.logs.forEach(l=>{const x=g(l.data.slice(0,7));x.tr++;x.kb+=l.kcal});
+  E.logs.forEach(l=>{const x=g(l.data.slice(0,7));if(l.s==="ok"){x.ev+=(l.k!=null?l.k:eKcalDia());x.e+=l.v}else x.g+=l.v});
+  const mk=Object.keys(M2).sort();let cum=0;
+  const rows=mk.map(m=>{const x=M2[m];cum+=x.e-x.g;return `<tr><td>${m.slice(5)}/${m.slice(0,4)}</td><td>${x.tr}</td><td>${f1(x.kb,0)}</td><td>${f1(x.ev,0)}</td><td>${Rf(x.e-x.g)}</td><td>${Rf(cum)}</td><td style="color:var(--ac)">${Rf(Math.max(0,cum)*d/12)}</td></tr>`}).join("")||'<tr><td colspan="7" style="text-align:center;color:var(--mu)">Sem registros</td></tr>';
+  const cal=mk.map(m=>({l:m.slice(5),a:M2[m].kb,b:M2[m].ev})),sal=mk.map(m=>{const v=M2[m].e-M2[m].g;return{l:m.slice(5),v,c:v<0?"#ff6b6b":"var(--ac)"}});
+  const none='<div class="empty">Registre treinos e check-ins para ver o gráfico.</div>';
+  const T=Object.entries(CK).map(([k,c])=>{const h=E.habit[k];return{c,mes:h.preco*h.pac*4.345,kc:h.pac*c.kcal*4.345,pac:h.pac,rec:sl.filter(l=>(l.t||"recheado")===k).length}}).filter(t=>t.pac>0||t.rec>0);
+  const mxT=Math.max(...T.map(t=>t.mes),1);
+  const projS=[...R.map(x=>({c:x.c,v:Array.from({length:21},(_,j)=>pv(x.p/100,Y*j/20))})),{c:"#8b96a3",d:1,v:Array.from({length:21},(_,j)=>pv(.1365,Y*j/20))}];
+  const avgBars=[...R.map(x=>({l:f1(x.p)+"%",v:x.r.ano,c:x.c})),{l:"CDI",v:cdi.ano,c:"#8b96a3"}];
+  $("ep5").innerHTML=`
+  <div class="card"><h2>Corpo × Bolso <i class="q" data-h="eco:final">?</i></h2><div class="stats">
+    <div class="stat"><b>${f1(burn,0)} kcal</b><span>gastas treinando</span></div>
+    <div class="stat"><b>${f1(av,0)} kcal</b><span>evitadas (biscoitos)</span></div>
+    <div class="stat"><b style="color:var(--ac)">${Rf(saldo)}</b><span>saldo da economia</span></div>
+    <div class="stat"><b style="color:var(--ac)">${Rf(pos*d/12)}</b><span>dividendos/mês (hoje, estimado)</span></div></div></div>
+  <div class="card"><h2>Calorias por mês</h2>${mk.length?svgStack(cal,"var(--blue)","var(--ac)")+leg([["Gastas treinando","var(--blue)"],["Evitadas (biscoitos)","var(--ac)"]]):none}</div>
+  <div class="card"><h2>Saldo da economia por mês (R$)</h2>${mk.length?svgBars(sal):none}</div>
+  <div class="card"><h2>Comparativo final</h2><div class="tw"><table style="min-width:360px"><thead><tr><th>Item</th><th>Valor</th><th style="text-align:left">Observação</th></tr></thead><tbody>${cmp.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td style="text-align:left;color:var(--mu)">${r[2]}</td></tr>`).join("")}</tbody></table></div></div>
+  <div class="card"><h2>Por marca</h2>${T.length?`<div class="tw"><table style="min-width:380px"><thead><tr><th>Tipo</th><th>Pac./sem.</th><th>Custo/mês</th><th>kcal/mês</th><th>Recaídas</th></tr></thead><tbody>${T.map(t=>`<tr><td>${t.c.e} ${esc(t.c.n)}</td><td>${t.pac}</td><td>${Rf(t.mes)}</td><td>${f1(t.kc,0)}</td><td>${t.rec}</td></tr>`).join("")}</tbody></table></div><h2 style="margin-top:14px">Custo mensal do hábito</h2>${T.map(t=>`<div class="hb"><span>${t.c.e} ${esc(t.c.n)}</span><div><i style="width:${t.mes/mxT*100}%"></i></div><span>${Rf(t.mes)}</span></div>`).join("")}`:'<div class="empty">Defina pacotes por semana em Ajustes (aba Hoje).</div>'}</div>
+  <div class="card"><h2>Dividendos de ações · ${Y} ${Y===1?"ano":"anos"}</h2><div class="sub" style="margin-bottom:10px">Aporte mensal de ${Rf(M)} investido em ações pagadoras de dividendos, com dividendos reinvestidos. Média de dividendos gerados por ano e por mês no período.</div>
+    <div class="tw"><table><thead><tr><th>DY médio</th><th>Patrimônio</th><th>Dividendos</th><th>Média/ano</th><th>Média/mês</th></tr></thead><tbody>${sc}
+    <tr style="color:var(--mu)"><td>CDI 13,65%*</td><td>${Rf(cdi.pat)}</td><td>${Rf(cdi.dv)}</td><td>${Rf(cdi.ano)}</td><td>${Rf(cdi.mes)}</td></tr></tbody></table></div>
+    <div class="sub" style="margin-top:10px">Com o DY escolhido (${f1(E.dy)}%): patrimônio de ${Rf(P.pat)} e renda anual de cerca de ${Rf(P.pat*d)} no fim do período.</div></div>
+  <div class="card"><h2>Evolução do patrimônio por cenário</h2>${svgLines(projS,["hoje",Y+(Y===1?" ano":" anos")])}${leg([...R.map(x=>[f1(x.p)+"% a.a.",x.c]),["CDI 13,65%","#8b96a3"]])}</div>
+  <div class="card"><h2>Média de dividendos por ano</h2>${svgBars(avgBars)}<div class="sub">Barra dourada: o DY escolhido. Cinza: juros do CDI, só para comparar.</div></div>
+  <div class="card"><h2>Planilha mensal: corpo × bolso</h2><div class="tw"><table style="min-width:520px"><thead><tr><th>Mês</th><th>Treinos</th><th>kcal gastas</th><th>kcal evitadas</th><th>Economia</th><th>Saldo acum.</th><th>Div./mês</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+  <div class="card"><h2>Referências e cuidados</h2>
+    <div class="rec"><b>DY médio padrão</b>Usei 7% ao ano, próximo da projeção de consenso citada para o Ibovespa em 2026. O valor é editável em Ajustes.</div>
+    <div class="rec"><b>*CDI de referência</b>13,65% ao ano em 04/11/2026 (Selic em 13,75%). É juro, não dividendo, mostrado antes do imposto, só para comparar.</div>
+    <div class="rec"><b>Atenção</b>Dividendos não são garantidos, um DY alto pode vir da queda do preço da ação, e o preço pode subir ou cair. Pode haver tributação conforme as regras vigentes. Simulação educativa, não recomendação de investimento.</div></div>`;
+}
+
+// eventos do modo economia
+function eTab(n){for(let i=1;i<=5;i++){$("ep"+i).classList.toggle("hide",i!==n);$("et"+i).classList.toggle("sel",i===n)}enter($("ep"+n))}
+[1,2,3,4,5].forEach(i=>$("et"+i).onclick=()=>eTab(i));
+$("eOk").onclick=()=>{eSetDay(key(new Date()),"ok");const c=eStreaks().cur;eRender();coins();floatText($("eOk"),"+"+Rf(eDia()));pulse($("eStreak"));
+  if([7,30,90,180,365].includes(c)){confetti();toast("🏅 Marco de "+c+" dias!")}else toast("🪙 +"+Rf(eDia())+" guardados · sequência "+c)};
+$("eSlip").onclick=()=>{eSetDay(key(new Date()),"slip",$("eTipo").value);eRender();shake($("eco").querySelector(".hero"));toast("Sem culpa: recomece amanhã")};
+$("ep4").onclick=e=>{const b=e.target.closest(".st");if(!b)return;const k=b.dataset.d,l=st.eco.logs.find(x=>x.data===k);eSetDay(k,!l?"ok":l.s==="ok"?"slip":null,$("eTipo").value);eRender()};
+$("eHabits").onchange=e=>{const i=e.target;if(!i.dataset.t)return;st.eco.habit[i.dataset.t][i.dataset.f]=Math.max(0,+i.value||0);save();eRender()};
+$("eTaxa").onchange=()=>{st.eco.taxa=Math.max(0,+$("eTaxa").value||0);save();eRender()};
+$("eMeta").onchange=()=>{st.eco.meta=Math.max(10,+$("eMeta").value||500);save();eRender()};
+$("eDy").onchange=()=>{st.eco.dy=Math.max(0,+$("eDy").value||0);save();eRender()};
+$("eAnos").oninput=()=>{st.eco.anos=+$("eAnos").value;save();ePlan()};
+$("eAder").oninput=()=>{st.eco.ader=+$("eAder").value;save();ePlan()};
+function setMode(m){st.mode=m;save();$("fit").style.display=m==="fit"?"":"none";$("eco").style.display=m==="eco"?"":"none";document.body.classList.toggle("eco",m==="eco");$("m1").classList.toggle("sel",m==="fit");$("m2").classList.toggle("sel",m==="eco");document.title=m==="eco"?"Sequência Econômica":"Sequência Fit";if(m==="eco")eRender();enter($(m==="eco"?"eco":"fit"));window.scrollTo(0,0)}
+$("m1").onclick=()=>setMode("fit");$("m2").onclick=()=>setMode("eco");
+eHabits();eTipoFill();$("eTaxa").value=st.eco.taxa;$("eMeta").value=st.eco.meta;$("eDy").value=st.eco.dy;$("eAnos").value=st.eco.anos;$("eAder").value=st.eco.ader;
+eRender();
+
+$("goal").value=st.meta;$("peso").value=st.peso;
+$("fref").innerHTML=FREF.map(r=>`<option>${r}</option>`).join("");
+$("fsel").innerHTML=FOODS.map((f,i)=>`<option value="${i}">${f[0]}</option>`).join("")+'<option value="x">Outro (digitar valores)</option>';
+buildForm();render();fprev();setMode(st.mode==="eco"?"eco":"fit");
+</script>
+</body>
+</html>
